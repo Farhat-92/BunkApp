@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Adaptive Attendance Bunk Calculator</title>
+  <style>
+    body {
+      font-family: "Poppins", sans-serif;
+      background: #0f172a;
+      color: #f1f5f9;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-start;
+      padding-top: 2rem;
+      min-height: 100vh;
+    }
+    h1 {
+      color: #38bdf8;
+      margin-bottom: 1rem;
+    }
+    .card {
+      background: #1e293b;
+      padding: 1.5rem;
+      border-radius: 1rem;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4);
+      width: 360px;
+      text-align: center;
+    }
+    .subject {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 0.4rem;
+    }
+    input {
+      width: 45%;
+      padding: 0.4rem;
+      border: none;
+      border-radius: 0.5rem;
+      text-align: center;
+      background: #334155;
+      color: #f1f5f9;
+    }
+    button {
+      margin-top: 1rem;
+      padding: 0.7rem 1rem;
+      background: #38bdf8;
+      color: #0f172a;
+      border: none;
+      border-radius: 0.5rem;
+      font-weight: bold;
+      cursor: pointer;
+    }
+    button:hover {
+      background: #0ea5e9;
+    }
+    #result {
+      margin-top: 1rem;
+      font-size: 1rem;
+      color: #a7f3d0;
+    }
+  </style>
+</head>
+<body>
+  <h1>Attendance Bunk Calculator</h1>
+  <div class="card">
+    <div id="subjectInputStage">
+      <label>Enter Number of Subjects:</label><br>
+      <input type="number" id="subjectCount" placeholder="e.g. 6" min="1" max="20">
+      <button onclick="generateSubjects()">Next</button>
+    </div>
+
+    <div id="subjects" style="display:none;"></div>
+    <button id="calcBtn" onclick="calculate()" style="display:none;">Calculate</button>
+    <div id="result"></div>
+  </div>
+
+  <script>
+    function generateSubjects() {
+      const count = parseInt(document.getElementById("subjectCount").value);
+      const subjectContainer = document.getElementById("subjects");
+      const calcBtn = document.getElementById("calcBtn");
+      const stage = document.getElementById("subjectInputStage");
+      const result = document.getElementById("result");
+
+      if (isNaN(count) || count <= 0) {
+        result.innerText = "Please enter a valid number of subjects.";
+        return;
+      }
+
+      // Clear and show new inputs
+      subjectContainer.innerHTML = "";
+      for (let i = 1; i <= count; i++) {
+        subjectContainer.innerHTML += `
+          <div class="subject">
+            <input type="number" id="att${i}" placeholder="Attended ${i}" min="0">
+            <input type="number" id="tot${i}" placeholder="Total ${i}" min="0">
+          </div>`;
+      }
+
+      stage.style.display = "none";
+      subjectContainer.style.display = "block";
+      calcBtn.style.display = "inline-block";
+      result.innerText = "";
+    }
+
+    function calculate() {
+      const inputs = document.querySelectorAll('[id^="att"], [id^="tot"]');
+      let totalAttended = 0, totalClasses = 0;
+
+      for (let i = 0; i < inputs.length; i += 2) {
+        let attended = parseInt(inputs[i].value) || 0;
+        let total = parseInt(inputs[i + 1].value) || 0;
+        totalAttended += attended;
+        totalClasses += total;
+      }
+
+      if (totalClasses === 0 || totalAttended > totalClasses) {
+        document.getElementById("result").innerText = "Enter valid numbers for all subjects.";
+        return;
+      }
+
+      let currentAttendance = (totalAttended / totalClasses) * 100;
+
+      // Assume 4 classes per day
+      let safeDays = 0;
+      let tempTotal = totalClasses;
+
+      while ((totalAttended / (tempTotal + 4)) >= 0.75) {
+        tempTotal += 4;
+        safeDays++;
+      }
+
+      let canBunkNextDay = (totalAttended / (totalClasses + 4)) >= 0.75;
+
+      document.getElementById("result").innerHTML =
+        `Total Attended Classes: <b>${totalAttended}</b><br>` +
+        `Total Conducted Classes: <b>${totalClasses}</b><br>` +
+        `Current Attendance: <b>${currentAttendance.toFixed(2)}%</b><br>` +
+        `Can bunk next day? <b>${canBunkNextDay ? "Yes 😎" : "No 🚫"}</b><br>` +
+        `Safe bunk days left: <b>${safeDays}</b>`;
+    }
+  </script>
+</body>
+</html>
